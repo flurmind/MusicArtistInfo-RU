@@ -133,7 +133,7 @@ sub getSongLyricsCLI {
 		$args->{album}  //= $args->{track}->albumname;
 		$args->{title}  //= $args->{track}->title;
 		$args->{duration} = $args->{track}->secs;
-		$args->{radioUrl} //= $args->{track}->url if $args->{track}->isRemoteURL;
+		$args->{radioUrl} //= $args->{track}->url if Slim::Music::Info::isHTTPURL($args->{track}->url);
 
 		if ( $client && !($args->{track} && $args->{artist} && $args->{title} && $args->{duration} && $args->{album}) && $args->{track}->isRemoteURL ) {
 			my $handler = Slim::Player::ProtocolHandlers->handlerForURL($args->{track}->url);
@@ -143,7 +143,7 @@ sub getSongLyricsCLI {
 				$args->{artist} //= $meta->{artist};
 				$args->{album}  //= $meta->{album};
 				$args->{title}  //= $meta->{title};
-				$args->{duration} //= $meta->{duration};
+				$args->{duration} ||= $meta->{duration};
 			}
 		}
 	}
