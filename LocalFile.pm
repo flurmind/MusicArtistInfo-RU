@@ -33,6 +33,7 @@ use Slim::Web::Pages;
 use Plugins::MusicArtistInfo::Common qw(CLICOMMAND);
 
 my $log   = logger('plugin.musicartistinfo');
+my $onlineLog = logger('plugin.musicartistinfo.online');
 my $prefs = preferences('plugin.musicartistinfo');
 my $cache = Slim::Utils::Cache->new;
 
@@ -69,6 +70,8 @@ sub init {
 sub getAlbumReview {
 	my ( $class, $client, $params, $args ) = @_;
 
+	return if main::DEBUGLOG && $onlineLog->is_debug; # force online lookup for testing
+
 	my $review;
 
 	if ($args->{album_id}) {
@@ -99,6 +102,8 @@ sub getAlbumReview {
 
 sub getBiography {
 	my ( $class, $client, $params, $args ) = @_;
+
+	return if main::DEBUGLOG && $onlineLog->is_debug; # force online lookup for testing
 
 	return unless $args->{artist} || $args->{artist_id};
 

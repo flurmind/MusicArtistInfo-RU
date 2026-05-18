@@ -25,6 +25,14 @@ my $log = Slim::Utils::Log->addLogCategory( {
 	description  => 'PLUGIN_MUSICARTISTINFO',
 	logGroups    => 'SCANNER',
 } );
+
+# use this logger in DEBUG mode to disable use of local caches etc, enforce online lookups where possible
+Slim::Utils::Log->addLogCategory( {
+	category     => 'plugin.musicartistinfo.online',
+	defaultLevel => 'ERROR',
+	description  => 'PLUGIN_MUSICARTISTINFO_REMOTE_DEBUGGING',
+} );
+
 my $prefs = preferences('plugin.musicartistinfo');
 
 our $VERSION;

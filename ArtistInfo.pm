@@ -16,6 +16,7 @@ use Plugins::MusicArtistInfo::LFM;
 use Plugins::MusicArtistInfo::API;
 
 my $log   = logger('plugin.musicartistinfo');
+my $onlineLog = logger('plugin.musicartistinfo.online');
 my $prefs = Slim::Utils::Prefs::preferences('plugin.musicartistinfo');
 
 sub init {
@@ -493,7 +494,7 @@ sub _getArtistPhotos {
 	}, $args ) if delete $services{discogs};
 
 	if ($services{'local'}) {
-		if (CAN_IMAGEPROXY) {
+		if ( CAN_IMAGEPROXY && !(main::DEBUGLOG && $onlineLog->is_debug) ) {
 			my $local = Plugins::MusicArtistInfo::LocalArtwork->getArtistPhoto({
 				artist    => $args->{artist},
 				artist_id => $args->{artist_id},
@@ -526,7 +527,7 @@ sub getArtistPhotoCLI {
 	return unless $artist;
 
 	# try local artwork first
-	if ( CAN_IMAGEPROXY && (Plugins::MusicArtistInfo::LocalArtwork->getArtistPhoto({
+	if ( CAN_IMAGEPROXY && !(main::DEBUGLOG && $onlineLog->is_debug) && (Plugins::MusicArtistInfo::LocalArtwork->getArtistPhoto({
 		artist    => $artist,
 		artist_id => $artist_id,
 		rawUrl    => 1,
@@ -896,11 +897,11 @@ sub _artworkUrl {
 	main::INFOLOG && $log->info("Artist ID is '$artist_id', name '$artist', musicbrainz ID '$mbid'");
 
 	# try local artwork first
-	if ( my $local = Plugins::MusicArtistInfo::LocalArtwork->getArtistPhoto({
+	if ( !(main::DEBUGLOG && $onlineLog->is_debug) && (my $local = Plugins::MusicArtistInfo::LocalArtwork->getArtistPhoto({
 		artist    => $artist,
 		artist_id => $artist_id,
 		rawUrl    => 1,
-	}) ) {
+	})) ) {
 		main::INFOLOG && $log->info("Found local artwork: $local");
 		return Slim::Utils::Misc::fileURLFromPath($local);
 	}

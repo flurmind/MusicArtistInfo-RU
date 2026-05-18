@@ -18,6 +18,7 @@ use Plugins::MusicArtistInfo::Common qw(CLICOMMAND);
 use Plugins::MusicArtistInfo::Parser::LRC;
 
 my $log = logger('plugin.musicartistinfo');
+my $onlineLog = logger('plugin.musicartistinfo.online');
 my $prefs = preferences('plugin.musicartistinfo');
 
 my $lyricsProviderPipeline = [
@@ -188,13 +189,14 @@ sub getSongLyricsCLI {
 
 	main::INFOLOG && $log->is_info && $log->info("Getting lyrics for " . $args->{title} . ' by ' . $args->{artist});
 
-	if ( $args->{track} && (my $lyrics = $args->{track}->lyrics) ) {
+	my $forceOnlineLookup = main::DEBUGLOG && $onlineLog->is_debug;
+	if ( !$forceOnlineLookup && $args->{track} && (my $lyrics = $args->{track}->lyrics) ) {
 		_renderLyricsResponse($lyrics, $request, $args);
 		$request->setStatusDone();
 		return;
 	}
 
-	if (my $lyrics = _getCachedLyrics($args) || _getLocalLyrics($args)) {
+	if ( !$forceOnlineLookup && (my $lyrics = _getCachedLyrics($args) || _getLocalLyrics($args)) ) {
 		main::INFOLOG && $log->is_info && $log->info("Found cached/local lyrics for " . $args->{title} . ' by ' . $args->{artist});
 		_renderLyricsResponse($lyrics, $request, $args);
 		$request->setStatusDone();
