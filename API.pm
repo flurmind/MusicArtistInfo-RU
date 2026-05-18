@@ -213,6 +213,8 @@ sub getLyrics {
 			}
 
 			$cb->($result);
+		},{
+			radioUrl => $args->{radioUrl},
 		}
 	)
 }

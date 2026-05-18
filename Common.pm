@@ -186,7 +186,7 @@ sub getTrackAndRadioUrl {
 
 	my $track = $args->{track} || Slim::Player::Playlist::track($client);
 
-	$args->{radioUrl} = $track->url if $track && $track->isRemoteURL;
+	$args->{radioUrl} = $track->url if $track && Slim::Music::Info::isHTTPURL($track->url);
 
 	return $track;
 }

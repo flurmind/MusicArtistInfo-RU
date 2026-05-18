@@ -149,6 +149,8 @@ sub getSongLyricsCLI {
 		}
 	}
 
+	$args->{radioUrl} ||= $url if Slim::Music::Info::isHTTPURL($url);
+
 	# remove album/duration from radio streams - they're most likely invalid data
 	if ($args->{radioUrl}) {
 		delete $args->{album};
