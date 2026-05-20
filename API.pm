@@ -96,7 +96,11 @@ sub getArtistBioId {
 			my ($result) = @_;
 
 			main::INFOLOG && $log->is_info && $log->info("found biography: " . Data::Dump::dump($result));
-
+			# НАЧАЛО ВСТАВКИ ДЛЯ ЯНДЕКС МУЗЫКИ (АРТИСТ)
+			if ( $result && ref $result eq 'HASH' && $args->{artist} ) {
+				$result->{yandex} = 'https://music.yandex.ru/search?text=' . uri_escape_utf8($args->{artist}) . '&type=artists';
+			}
+			# КОНЕЦ ВСТАВКИ
 			$cb->($result);
 		}
 	);
@@ -125,7 +129,12 @@ sub getAlbumReviewId {
 			my ($result) = @_;
 
 			main::INFOLOG && $log->is_info && $log->info("found album review: " . Data::Dump::dump($result));
-
+			# НАЧАЛО ВСТАВКИ ДЛЯ ЯНДЕКС МУЗЫКИ (АЛЬБОМ)
+			if ( $result && ref $result eq 'HASH' && $args->{artist} && $args->{album} ) {
+				my $search_query = $args->{artist} . ' ' . $args->{album};
+				$result->{yandex} = 'https://music.yandex.ru/search?text=' . uri_escape_utf8($search_query) . '&type=albums';
+			}
+			# КОНЕЦ ВСТАВКИ
 			$cb->($result);
 		}
 	);
