@@ -45,6 +45,7 @@ my $contentLanguages = {
 	NL => 'nl',
 	PL => 'pl',
 	PT => 'pt',
+	RU => 'ru',
 	SV => 'sv',
 	ZH_CN	=> 'zh'
 };
@@ -66,7 +67,13 @@ use constant MAX_DELAY => 30;
 
 sub validateLanguage {
 	my ($client, $lang) = @_;
-	return $lang || $contentLanguages->{$prefs->get('preferredLanguage')} || cstring($client, 'PLUGIN_MUSICARTISTINFO_WIKIPEDIA_LANGUAGE');
+	
+	# Возвращаем переданный язык, либо язык из настроек, либо язык системы.
+	# Если ничего не найдено - железно используем английский ('en').
+	return $lang 
+		|| $contentLanguages->{$prefs->get('preferredLanguage')} 
+		|| cstring($client, 'PLUGIN_MUSICARTISTINFO_WIKIPEDIA_LANGUAGE')
+		|| 'en';
 }
 
 sub storeContentLanguageStrings {
