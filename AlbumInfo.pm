@@ -158,24 +158,28 @@ sub renderReview {
 	};
 
 	if ($reviewData && (my $pageData = $reviewData->{wikidata})) {
-		Plugins::MusicArtistInfo::Wikipedia->getPage($client, sub {
-			my $review = shift;
-
-			if ($review && $review->{content} && $review->{contentText}) {
-				$review->{review} = delete $review->{content};
-				$review->{reviewText} = delete $review->{contentText};
-				return $reviewCb->($review);
-			}
-			elsif ($type eq REVIEW_TYPE_TRACK) {
-				return $reviewCb->();
-			}
-
+		if (($args->{lang} // '') eq 'ru' && ($pageData->{lang} // '') ne 'ru') {
+			# Игнорируем английскую подсказку сервера и ищем на русском вручную
 			Plugins::MusicArtistInfo::Wikipedia->getAlbumOrWorkReview($client, $reviewCb, $type, $args);
-		}, {
-			title => $pageData->{title},
-			id => $pageData->{pageid},
-			lang => $pageData->{lang} || $args->{lang},
-		});
+		}
+		else {
+			Plugins::MusicArtistInfo::Wikipedia->getPage($client, sub {
+				my $review = shift;
+				if ($review && $review->{content} && $review->{contentText}) {
+					$review->{review} = delete $review->{content};
+					$review->{reviewText} = delete $review->{contentText};
+					return $reviewCb->($review);
+				}
+				elsif ($type eq REVIEW_TYPE_TRACK) {
+					return $reviewCb->();
+				}
+				Plugins::MusicArtistInfo::Wikipedia->getAlbumOrWorkReview($client, $reviewCb, $type, $args);
+			}, {
+				title => $pageData->{title},
+				id => $pageData->{pageid},
+				lang => $pageData->{lang} || $args->{lang},
+			});
+		}
 	}
 	elsif ($type eq REVIEW_TYPE_TRACK) {
 		return $reviewCb->();
