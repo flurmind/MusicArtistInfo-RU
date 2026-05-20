@@ -29,6 +29,7 @@ sub _lfmLanguage {
 		'it' => 'it',
 		'pl' => 'pl',
 		'pt' => 'pt',
+		'ru' => 'ru',
 		'sv' => 'sv',
 	}->{$_[0]} || 'en';
 }
