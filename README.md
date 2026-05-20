@@ -22,7 +22,9 @@ This fork introduces deep optimization for Russian language metadata retrieval a
   2. *Disambiguation Protection:* Automatic category filtering (`Страницы_значений`, `Неоднозначности`) to skip lists of meanings.
   3. *Validated Full-Text Search:* Fallback to full-text search with strict validation ensuring the artist's name is actually mentioned in the article snippet.
 * **Wikidata Language Fix:** Upstream API (lms-community.org) explicitly forces English page IDs for Wikidata objects. This fork bypasses that limitation, searching by artist name/album title in Russian Wikipedia first.
-* **Enhanced Local Lyrics (LRC/TXT) Matching:** * Bypassed forced online lyric providers cached in preferences.
+* **Optimized Lyrics Priority & Enhanced Local Matching (LRC/TXT):**
+  * Reordered the lookup logic: the plugin now **strictly prioritizes local files first**, falling back to online network providers only if no local lyrics are found.
+  * Bypassed forced online lyric providers cached in preferences.
   * Added automated lookup for files formatted as `Artist - Title.lrc` or `Artist - Title.txt`.
   * The plugin now checks both the track's folder and the global central lyrics directory.
   * Fixed a critical Perl regex syntax error related to filename sanitization (`/` divider inside character classes).
@@ -48,7 +50,9 @@ This fork introduces deep optimization for Russian language metadata retrieval a
   2. *Фильтрация страниц значений (дизамбигов):* Анализ скрытых категорий статьи на маркеры неоднозначности. Если это список, плагин автоматически идет дальше.
   3. *Полнотекстовый поиск с валидацией:* Поиск по тексту статей с проверкой обязательного упоминания имени конкретного исполнителя в аннотации.
 * **Исправление привязки к Wikidata:** Оригинальный API lms-community жестко возвращает английские идентификаторы страниц (ID), из-за чего плагин всегда открывал англоязычную Википедию. Форк исправляет это, заставляя систему сначала искать текстовое имя артиста в ру-сегменте.
-* **Расширенный поиск локальной лирики (LRC/TXT):** * Отключен принудительный приоритет онлайн-провайдеров лирики, если они были сохранены в настройках сервера.
+* **Изменение приоритета и расширенный поиск локальной лирики (LRC/TXT):**
+  * Изменена логика обработки: теперь плагин **строго сначала ищет локальные файлы**, и только в случае их отсутствия обращается к онлайн-провайдерам в сети.
+  * Отключен принудительный приоритет онлайн-провайдеров лирики, если они были сохранены в настройках сервера.
   * Добавлен гибкий поиск файлов в формате `Артист - Название.lrc` и `Артист - Название.txt`.
   * Поиск корректно работает как в папке с аудиофайлом, так и в централизованной папке с текстами.
   * Исправлена критическая синтаксическая ошибка регулярного выражения Perl при очистке спецсимволов в именах файлов.
