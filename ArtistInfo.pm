@@ -207,21 +207,40 @@ sub getBiography {
 
 			# TODO - respect fallback language setting?
 			if ($bioData && (my $pageData = $bioData->{wikidata})) {
-				Plugins::MusicArtistInfo::Wikipedia->getPage($client, sub {
-					my $bio = shift;
+				my $wikiLang    = $pageData->{lang} || 'en';
+				my $requestLang = $args->{lang} || $wikiLang;
 
-					if ($bio && $bio->{content} && $bio->{contentText}) {
-						$bio->{bio} = delete $bio->{content};
-						$bio->{bioText} = delete $bio->{contentText};
-						return $bioCb->($bio);
-					}
+				my $fetchFromWikidata = sub {
+					Plugins::MusicArtistInfo::Wikipedia->getPage($client, sub {
+						my $bio = shift;
+						if ($bio && $bio->{content} && $bio->{contentText}) {
+							$bio->{bio}     = delete $bio->{content};
+							$bio->{bioText} = delete $bio->{contentText};
+							return $bioCb->($bio);
+						}
+						Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
+					}, {
+						title => $pageData->{title},
+						id    => $pageData->{pageid},
+						lang  => $wikiLang,
+					});
+				};
 
-					Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
-				}, {
-					title => $pageData->{title},
-					id => $pageData->{pageid},
-					lang => $pageData->{lang} || $args->{lang},
-				});
+				# Если запрошен не английский — сначала ищем в нужном языке по имени
+				if ($requestLang ne $wikiLang) {
+					require Plugins::MusicArtistInfo::Wikipedia;
+					Plugins::MusicArtistInfo::Wikipedia->getBiography($client, sub {
+						my $bio = shift;
+						if ($bio && $bio->{bio}) {
+							return $bioCb->($bio);
+						}
+						# Не нашли на нужном языке — берём английский из wikidata
+						$fetchFromWikidata->();
+					}, { artist => $args->{artist}, lang => $requestLang });
+				}
+				else {
+					$fetchFromWikidata->();
+				}
 			}
 			elsif ($bioData->{url} && $prefs->get('useAIGeneratedContent') && $bioData->{url} =~ m{^https?://music-metadata\.lms-community.*\.md$}i) {
 				Slim::Networking::SimpleAsyncHTTP->new(
