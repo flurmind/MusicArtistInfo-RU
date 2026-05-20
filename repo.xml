@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extensions>
+    <details>
+        <title>Flurmind Custom Plugins</title>
+    </details>
+    <plugins>
+        <plugin name="MusicArtistInfo" version="1.30.0" minTarget="8.0" maxTarget="*">
+            <title>Music Artist Info (RU Edition)</title>
+            <desc>Форк с умным поиском по русскоязычной Википедии и улучшенной поддержкой локальной лирики.</desc>
+            <creator>Michael Herger / Mod by flurmind</creator>
+            <url>https://github.com/flurmind/MusicArtistInfo/archive/refs/heads/master.zip</url>
+        </plugin>
+    </plugins>
+</extensions>
