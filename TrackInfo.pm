@@ -22,6 +22,7 @@ my $onlineLog = logger('plugin.musicartistinfo.online');
 my $prefs = preferences('plugin.musicartistinfo');
 
 my $lyricsProviderPipeline = [
+	'LocalFile',
 	'MAILyricsAPI',
 	# 'AZLyrics',
 	# 'LRCLibGet',
@@ -317,7 +318,7 @@ sub _fetchLyrics {
 	my $handlerPipeline = [
 		grep { $_ }
 		map { $lyricsProvider->{$_} }
-		@{$prefs->get('lyricsProviders') || $lyricsProviderPipeline}
+		@{$lyricsProviderPipeline}
 	];
 
 	Async::Util::amap(
@@ -413,40 +414,86 @@ sub _getLocalLyrics {
 	my ($args) = @_;
 
 	my $track = $args->{track};
-	my $url = $track->url if $track;
-	$url ||= $args->{url};
-	$url =~ s/^tmp:/file:/ if $url;
+	my $url   = $args->{url};
+
+	if ($track && $track->can('url')) {
+		$url = $track->url;
+	}
+
+	if ($url) {
+		$url =~ s/^tmp:/file:/;
+	}
 
 	my $lyrics;
 
-	# try "Song.mp3.lrc" and "Song.lrc"
+	# --- ШАГ 1: ИЩЕМ В ПАПКЕ С МУЗЫКАЛЬНЫМ ФАЙЛОМ ---
 	if ($url && Slim::Music::Info::isFileURL($url)) {
 		my $filePath = Slim::Utils::Misc::pathFromFileURL($url);
+		my $fileDir = File::Basename::dirname($filePath);
+		
+		# Стандартные варианты LMS (ИмяФайла.mp3.lrc и ИмяФайла.lrc)
 		my $filePath2 = $filePath . '.lrc';
 		$filePath =~ s/\.\w{2,4}$/.lrc/;
 
-		# try .lrc files first
 		my @files = ($filePath, $filePath2);
+		
+		# Стандартные текстовые варианты (ИмяФайла.mp3.txt и ИмяФайла.txt)
+		my $filePathTxt = $filePath;
+		$filePathTxt =~ s/\.lrc$/.txt/;
+		my $filePath2Txt = $filePath2;
+		$filePath2Txt =~ s/\.lrc$/.txt/;
+		
+		push @files, $filePathTxt, $filePath2Txt;
 
-		# text files second
-		$filePath =~ s/\.lrc$/.txt/;
-		$filePath2 =~ s/\.lrc$/.txt/;
+		# Добавляем кастомный формат "Исполнитель - Название.lrc/.txt" в папку к треку
+		if ($args->{artist} && $args->{title}) {
+			require File::Spec::Functions;
+			my $customFileName = $args->{artist} . ' - ' . $args->{title};
+			$customFileName =~ s/[\\\/:\*\?"<>\|]/_/g; # очистка от запрещенных символов
+			
+			push @files, File::Spec::Functions::catfile($fileDir, "$customFileName.lrc");
+			push @files, File::Spec::Functions::catfile($fileDir, "$customFileName.txt");
+		}
 
-		push @files, $filePath, $filePath2;
-
+		# Сканируем собранные пути в папке трека
 		foreach my $file (@files) {
 			if (-r $file) {
 				$lyrics = File::Slurp::read_file($file);
 				if ($lyrics) {
 					utf8::decode($lyrics);
-					last;
+					main::INFOLOG && $log->is_info && $log->info("Нашли локальный текст в папке трека: $file");
+					return $lyrics; # нашли — сразу отдаем
 				}
 			}
 		}
-
-		return $lyrics if $lyrics;
 	}
 
+	# --- ШАГ 2: ИЩЕМ В ЦЕНТРАЛЬНОЙ ПАПКЕ ЛИРИКИ (Формат: Артист - Трек.lrc/.txt) ---
+	my $lyricsFolder = $prefs->get('lyricsFolder');
+	if ($lyricsFolder && -d $lyricsFolder && $args->{artist} && $args->{title}) {
+		require File::Spec::Functions;
+		
+		my $customFileName = $args->{artist} . ' - ' . $args->{title};
+		$customFileName =~ s/[\\\/:\*\?"<>\|]/_/g;
+		
+		my @customFiles = (
+			File::Spec::Functions::catfile($lyricsFolder, "$customFileName.lrc"),
+			File::Spec::Functions::catfile($lyricsFolder, "$customFileName.txt")
+		);
+
+		foreach my $file (@customFiles) {
+			if (-r $file) {
+				$lyrics = File::Slurp::read_file($file);
+				if ($lyrics) {
+					utf8::decode($lyrics);
+					main::INFOLOG && $log->is_info && $log->info("Нашли кастомный текст в центральной папке: $file");
+					return $lyrics; # нашли — сразу отдаем
+				}
+			}
+		}
+	}
+
+	# --- ШАГ 3: РОДНОЙ ФОЛЛБЕК ПЛАГИНА (Поиск в подпапках LyricsFolder/Artist/Title.txt) ---
 	if ($args->{artist} && $args->{title}) {
 		my $lyricsCacheFolder = _getLyricsCacheFile({
 			artist => $args->{artist},
@@ -473,6 +520,7 @@ sub _getLocalLyrics {
 							$lyrics = File::Slurp::read_file(catfile($lyricsCacheFolder, $file));
 							if ($lyrics) {
 								utf8::decode($lyrics);
+								main::INFOLOG && $log->is_info && $log->info("Нашли текст в стандартном кэше плагина: $file");
 								last;
 							}
 						}
@@ -496,7 +544,7 @@ sub _renderLyricsResponse {
 	$lyrics =~ s/\r/\n/g;
 
 	$lyrics = Plugins::MusicArtistInfo::Parser::LRC->strip($lyrics, $request->getParam('timestamps') && !$args->{radioUrl});
-
+	
 	$request->addResult('lyrics', $lyrics) if $lyrics;
 	$request->addResult('error', cstring($client, 'PLUGIN_MUSICARTISTINFO_NOT_FOUND')) unless $lyrics;
 	$request->addResult('title', $args->{title}) if $args->{title};
