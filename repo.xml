@@ -6,7 +6,7 @@
     <plugins>
         <plugin name="MusicArtistInfo" version="10.29.2-ru" minTarget="8.0" maxTarget="*" id="65f0c9e0-042f-11e3-8ffd-0800200c9a66">
             <title>Music Artist Info (RU Edition)</title>
-            <desc>Форк оригинального плагина с умным поиском по RU-Википедии, интеграцией Яндекс.Музыки и приоритетом локальной лирики.</desc>
+            <desc>Форк оригинального плагина с умным поиском по RU-Википедии и приоритетом локальной лирики.</desc>
             <creator>Michael Herger / Mod by flurmind</creator>
             <url>https://github.com/flurmind/MusicArtistInfo-RU/archive/refs/heads/master.zip</url>
         </plugin>
