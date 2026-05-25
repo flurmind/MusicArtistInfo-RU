@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extensions>
     <details>
-        <title>Flurmind Custom Plugins</title>
+        <title>Flurmind Custom Plugins Repository</title>
     </details>
     <plugins>
-        <plugin name="MusicArtistInfo" version="10.29.2-ru" minTarget="8.0" maxTarget="*" id="65f0c9e0-042f-11e3-8ffd-0800200c9a66">
-            <title>Music Artist Info (RU Edition)</title>
-            <desc>Форк оригинального плагина с умным поиском по RU-Википедии и приоритетом локальной лирики.</desc>
-            <creator>Michael Herger / Mod by flurmind</creator>
-            <url>https://github.com/flurmind/MusicArtistInfo-RU/archive/refs/heads/master.zip</url>
-        </plugin>
+        <pluginList>
+            <plugin name="MusicArtistInfo" version="10.29" minTarget="8.0" maxTarget="*" id="65f0c9e0-042f-11e3-8ffd-0800200c9a66">
+                <title>Music Artist Info (RU Edition)</title>
+                <desc>Fork with RU-Wikipedia and Yandex Music support.</desc>
+                <creator>flurmind</creator>
+                <url>https://github.com/flurmind/MusicArtistInfo-RU/archive/refs/heads/master.zip</url>
+            </plugin>
+        </pluginList>
     </plugins>
 </extensions>
