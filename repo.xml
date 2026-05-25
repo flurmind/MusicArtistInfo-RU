@@ -3,11 +3,13 @@
 	<details>
 		<title lang="EN">Flurmind Custom Plugins Repository</title>
 	</details>
-	<plugin name="MusicArtistInfo" version="10.29.2" minTarget="8.0" maxTarget="*" targetDir="MusicArtistInfo">
+	<plugin name="MusicArtistInfo" version="10.29.3" minTarget="8.0" maxTarget="*" targetDir="MusicArtistInfo">
 		<title lang="EN">Music Artist Info (RU Edition)</title>
-		<desc lang="EN">Fork with RU-Wikipedia and Yandex Music support.</desc>
+		<desc lang="EN">Fork with RU-Wikipedia support.</desc>
 		<creator>flurmind</creator>
-		<url>https://github.com/flurmind/MusicArtistInfo/archive/refs/tags/v10.29.2.zip</url>
+		<url>https://github.com/flurmind/MusicArtistInfo/releases/download/v10.29.3/MusicArtistInfoRU.zip</url>
 		<id>65f0c9e0-042f-11e3-8ffd-0800200c9a77</id>
+		<link>https://github.com/flurmind/MusicArtistInfo</link>
+		<type>2</type>
 	</plugin>
 </extensions>
