@@ -3,7 +3,7 @@
 	<details>
 		<title lang="EN">Flurmind Custom Plugins Repository</title>
 	</details>
-	<plugin name="MusicArtistInfo" version="10.29" minTarget="8.0" maxTarget="*" targetDir="MusicArtistInfo">
+	<plugin name="MusicArtistInfo" version="10.29.2" minTarget="8.0" maxTarget="*" targetDir="MusicArtistInfo">
 		<title lang="EN">Music Artist Info (RU Edition)</title>
 		<desc lang="EN">Fork with RU-Wikipedia and Yandex Music support.</desc>
 		<creator>flurmind</creator>
