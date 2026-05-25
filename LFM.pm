@@ -333,12 +333,19 @@ sub getAlbum {
 sub _call {
 	my ( $args, $cb ) = @_;
 
+	# Пропускаем язык через оригинальный фильтр автора
+	$args->{lang} = _lfmLanguage($args->{lang});
+
+	# Собираем URL и переключаем его на безопасный https://
+	my $url = BASE_API_URL . '?' . join( '&', Plugins::MusicArtistInfo::Common->getQueryString($args), Plugins::MusicArtistInfo::Common->getHeaders('lfm'), 'format=json' );
+	$url =~ s/^http:/https:/i;
+
 	Plugins::MusicArtistInfo::Common->call(
-		BASE_API_URL . '?' . join( '&', Plugins::MusicArtistInfo::Common->getQueryString($args), Plugins::MusicArtistInfo::Common->getHeaders('lfm'), 'format=json' ),
+		$url,
 		$cb,
 		{
 			cache => 1,
-			expires => 86400,	# force caching - discogs doesn't set the appropriate headers
+			expires => 86400,
 		}
 	);
 }
