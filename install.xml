@@ -1,7 +1,7 @@
 <?xml version='1.0' standalone='yes'?>
 <extension>
 	<name>PLUGIN_MUSICARTISTINFO</name>
-	<creator>Michael Herger (Mod by flurmind)</creator>
+	<creator>Michael Herger</creator>
 	<defaultState>enabled</defaultState>
 	<description>PLUGIN_MUSICARTISTINFO_DESC</description>
 	<category>information</category>
@@ -17,5 +17,5 @@
 		<minVersion>8.0</minVersion>
 	</targetApplication>
 	<type>2</type>
-	<version>10.29.2-ru</version>
+	<version>10.29</version>
 </extension>
