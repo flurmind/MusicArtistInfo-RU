@@ -313,7 +313,7 @@ sub call {
 	$params->{timeout} ||= 15;
 	my %headers = %{delete $params->{headers} || {}};
 	# We must use the "legacy" user agent string to comply with Discogs' TOU.
-	$headers{'User-Agent'} = Slim::Utils::Misc::userAgentString('legacy');
+	$headers{'User-Agent'} ||= Slim::Utils::Misc::userAgentString('legacy');
 
 	my $cb2 = sub {
 		my ($response, $error) = @_;
