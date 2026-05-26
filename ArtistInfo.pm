@@ -66,17 +66,17 @@ sub init {
 			);
 		}
 		else {
-			Slim::Web::ImageProxy->registerHandler(
-				match => qr/mai\/artist\/.+/,
-				func  => \&_artworkUrl,
-			);
+			#Slim::Web::ImageProxy->registerHandler(
+			#	match => qr/mai\/artist\/.+/,
+			#	func  => \&_artworkUrl,
+			#);
 
 			# dirty re-direct of the Artists menu - delay, as some items might not have registered yet
-			require Slim::Utils::Timers;
-			Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 2, \&_hijackArtistsMenu);
-			Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 15, \&_hijackArtistsMenu);
+			#require Slim::Utils::Timers;
+			#Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 2, \&_hijackArtistsMenu);
+			#Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 15, \&_hijackArtistsMenu);
 
-			$prefs->setChange(\&_hijackArtistsMenu, 'browseArtistPictures');
+			#$prefs->setChange(\&_hijackArtistsMenu, 'browseArtistPictures');
 		}
 	}
 }
@@ -189,23 +189,26 @@ sub getBiography {
 		sub {
 			my $bioData = shift || {};
 
-			my $bioCb = sub {
+			# Универсальный коллбэк для вывода результата
+			my $finalCb = sub {
 				my $bio = shift || {};
-
-				if ($bio->{error} || !$bio->{bio}) {
-					# in case of error or lack of Bio, try to fall back to English
-					delete $args->{lang};
-
-					Plugins::MusicArtistInfo::LFM->getBiography($client, sub {
-						$cb->(_getBioItems($_[0], $client, $params, $bioData));
-					}, $args);
-				}
-				else {
-					$cb->(_getBioItems($bio, $client, $params, $bioData));
-				}
+				$cb->(_getBioItems($bio, $client, $params, $bioData));
 			};
 
-			# TODO - respect fallback language setting?
+			# Отдельный независимый вызов Last.fm Фолбека
+			my $fallbackToLFM = sub {
+				main::DEBUGLOG && $log->debug("Wikipedia failed. Falling back to Last.fm for " . $args->{artist});
+				
+				# Вместо удаления нормализуем язык или подтягиваем язык сервера
+				my $current_lang = $args->{lang} || eval { Slim::Utils::Strings::getLanguage() } || 'en';
+				$current_lang = lc($current_lang);
+				$current_lang =~ s/[_-].*//; # Срезаем ru_RU до ru
+				
+				$args->{lang} = $current_lang;
+				
+				Plugins::MusicArtistInfo::LFM->getBiography($client, $finalCb, $args);
+			};
+
 			if ($bioData && (my $pageData = $bioData->{wikidata})) {
 				my $wikiLang    = $pageData->{lang} || 'en';
 				my $requestLang = $args->{lang} || $wikiLang;
@@ -216,9 +219,9 @@ sub getBiography {
 						if ($bio && $bio->{content} && $bio->{contentText}) {
 							$bio->{bio}     = delete $bio->{content};
 							$bio->{bioText} = delete $bio->{contentText};
-							return $bioCb->($bio);
+							return $finalCb->($bio);
 						}
-						Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
+						$fallbackToLFM->();
 					}, {
 						title => $pageData->{title},
 						id    => $pageData->{pageid},
@@ -231,8 +234,8 @@ sub getBiography {
 					require Plugins::MusicArtistInfo::Wikipedia;
 					Plugins::MusicArtistInfo::Wikipedia->getBiography($client, sub {
 						my $bio = shift;
-						if ($bio && $bio->{bio}) {
-							return $bioCb->($bio);
+						if ($bio && $bio->{bio} && $bio->{bio} !~ /not found/i) {
+							return $finalCb->($bio);
 						}
 						# Не нашли на нужном языке — берём английский из wikidata
 						$fetchFromWikidata->();
@@ -250,7 +253,7 @@ sub getBiography {
 
 						if ($@) {
 							$http->error($@ || 'Invalid response: ' . $http->content);
-							Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
+							$fallbackToLFM->();
 							return;
 						}
 
@@ -265,11 +268,11 @@ sub getBiography {
 
 						$bio->{bio} =~ s/\n+//g;
 
-						$bioCb->($bio);
+						$finalCb->($bio);
 					},
 					sub {
 						$log->error("Failed to fetch MD biography " . $bioData->{url} . ": " . $_[0]->error);
-						Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
+						$fallbackToLFM->();
 					},
 					{
 						cache => 1,
@@ -278,7 +281,7 @@ sub getBiography {
 				)->get($bioData->{url});
 			}
 			else {
-				Plugins::MusicArtistInfo::LFM->getBiography($client, $bioCb, $args);
+				$fallbackToLFM->();
 			}
 		},
 		$args,
@@ -884,7 +887,7 @@ sub _artworkRedirect { if (CAN_LMS_ARTIST_ARTWORK) {
 	my $artistInfo = _getArtistFromArtistId($artistId);
 	my $portraitId = $artistInfo->{portraitId};
 
-	$response->code(RC_MOVED_PERMANENTLY);
+	$response->code(302); # <-- ИСПРАВЛЕНИЕ: Меняем на временный редирект, чтобы браузер не "залипал" на ошибках
 
 	if ($portraitId) {
 		$response->header('Location' => "/contributor/$portraitId/image$spec");
@@ -902,6 +905,9 @@ sub _artworkUrl {
 	my ($url, $spec, $cb) = @_;
 
 	my ($artist_id) = $url =~ m|mai/_?artist/(.+)|i;
+	
+	# Очищаем имя от паразитного хвоста ImageProxy
+	$artist_id =~ s|/image$||i; 
 
 	return Slim::Utils::Misc::fileURLFromPath(
 		Plugins::MusicArtistInfo::LocalArtwork->defaultArtistPhoto()
@@ -957,7 +963,10 @@ sub _getSearchItem {
 
 # this is an ugly hack to manipulate the main artist menu to inject artist artwork
 my $retry = 0.5;
-sub _hijackArtistsMenu { if (CAN_IMAGEPROXY && !CAN_LMS_ARTIST_ARTWORK) {
+sub _hijackArtistsMenu {
+	return;
+	if (CAN_IMAGEPROXY && !CAN_LMS_ARTIST_ARTWORK) {
+	
 	main::DEBUGLOG && $log->is_debug && $prefs->get('browseArtistPictures') && $log->debug('Trying to redirect Artists menu...');
 
 	foreach my $node ( @{ Slim::Menu::BrowseLibrary->_getNodeList() } ) {
