@@ -1,36 +1,3 @@
-# Language / Язык
-[English](#music-and-artist-information-plugin-for-the-squeezebox-ecosystem) | [Русский](#плагин-music-and-artist-information-для-экосистемы-squeezebox)
-
----
-
-# Music And Artist Information plugin for the Squeezebox ecosystem
-
-This plugin for Logitech Media Server (LMS) and the Squeezebox ecosystem provides additional information for your music collection: biographies, album reviews, credits, related artists etc.
-
-The information presented by this plugin are sourced from:
-* [Wikipedia](https://wikipedia.org)
-* [Last.fm](https://last.fm)
-* [Discogs](https://discogs.com)
-* [MusicBrainz](https://musicbrainz.org)
-
-## 🚀 Fork Features & Enhancements (RU / Local Lyrics)
-This fork introduces deep optimization for Russian language metadata retrieval and enhances local lyrics file handling:
-
-* **Advanced Russian Language Support:** Added `RU` to content languages. Forced initial Russian queries for Wikipedia and Last.fm, with a safe fallback to English to prevent infinite request loops.
-* **Smart RU-Wikipedia Search Algorithm:** Implemented a robust 3-step search mechanism for albums and works in the Russian segment:
-  1. *Direct Title Lookup:* Quick check via MediaWiki API.
-  2. *Disambiguation Protection:* Automatic category filtering (`Страницы_значений`, `Неоднозначности`) to skip lists of meanings.
-  3. *Validated Full-Text Search:* Fallback to full-text search with strict validation ensuring the artist's name is actually mentioned in the article snippet.
-* **Wikidata Language Fix:** Upstream API (lms-community.org) explicitly forces English page IDs for Wikidata objects. This fork bypasses that limitation, searching by artist name/album title in Russian Wikipedia first.
-* **Optimized Lyrics Priority & Enhanced Local Matching (LRC/TXT):**
-  * Reordered the lookup logic: the plugin now **strictly prioritizes local files first**, falling back to online network providers only if no local lyrics are found.
-  * Bypassed forced online lyric providers cached in preferences.
-  * Added automated lookup for files formatted as `Artist - Title.lrc` or `Artist - Title.txt`.
-  * The plugin now checks both the track's folder and the global central lyrics directory.
-  * Fixed a critical Perl regex syntax error related to filename sanitization (`/` divider inside character classes).
-
----
-
 # Плагин Music And Artist Information для экосистемы Squeezebox
 
 Этот плагин для Logitech Media Server (LMS) и экосистемы Squeezebox предоставляет дополнительную информацию о вашей музыкальной коллекции: биографии исполнителей, обзоры альбомов, сведения об участниках записи, похожих артистах и многое другое.
@@ -41,18 +8,41 @@ This fork introduces deep optimization for Russian language metadata retrieval a
 * [Discogs](https://discogs.com)
 * [MusicBrainz](https://musicbrainz.org)
 
-## 🚀 Особенности и улучшения форка (RU локализация / Локальная лирика)
-Этот форк добавляет глубокую оптимизацию для работы с русскоязычными метаданными и расширяет возможности поиска локальных файлов субтитров/текстов песен:
+### Особенности форка
 
-* **Полноценная поддержка русского языка:** В список поддерживаемых языков добавлен `RU`. Все первичные запросы к Wikipedia и Last.fm принудительно отправляются на русском языке с безопасным автоматическим переключением на английский в случае отсутствия статьи (защита от бесконечного цикла).
-* **Умный алгоритм поиска в русскоязычной Википедии:** Для поиска обзоров альбомов внедрена трехступенчатая система:
-  1. *Прямой поиск:* Проверка точного совпадения заголовка статьи.
-  2. *Фильтрация страниц значений (дизамбигов):* Анализ скрытых категорий статьи на маркеры неоднозначности. Если это список, плагин автоматически идет дальше.
-  3. *Полнотекстовый поиск с валидацией:* Поиск по тексту статей с проверкой обязательного упоминания имени конкретного исполнителя в аннотации.
-* **Исправление привязки к Wikidata:** Оригинальный API lms-community жестко возвращает английские идентификаторы страниц (ID), из-за чего плагин всегда открывал англоязычную Википедию. Форк исправляет это, заставляя систему сначала искать текстовое имя артиста в ру-сегменте.
-* **Изменение приоритета и расширенный поиск локальной лирики (LRC/TXT):**
-  * Изменена логика обработки: теперь плагин **строго сначала ищет локальные файлы**, и только в случае их отсутствия обращается к онлайн-провайдерам в сети.
-  * Отключен принудительный приоритет онлайн-провайдеров лирики, если они были сохранены в настройках сервера.
-  * Добавлен гибкий поиск файлов в формате `Артист - Название.lrc` и `Артист - Название.txt`.
-  * Поиск корректно работает как в папке с аудиофайлом, так и в централизованной папке с текстами.
-  * Исправлена критическая синтаксическая ошибка регулярного выражения Perl при очистке спецсимволов в именах файлов.
+- **Поддержка русского языка:** Добавлен RU, приоритет русского сегмента Wikipedia/Last.fm с fallback на английский.
+- **Умный поиск в Wikipedia:** 3-ступенчатый алгоритм (прямой поиск → фильтр дизамбигов → полнотекстовый поиск с проверкой упоминания артиста).
+- **Исправление Wikidata:** Обход принудительной английской pageid — сначала поиск по имени в русской Википедии.
+- **Приоритет локальной лирики:** Локальный поиск в первую очередь, поддержка файлов `Артист - Название.lrc/txt`.
+
+---
+
+## Установка в Docker
+
+Скрипт автоматически скачает актуальные файлы плагина из репозитория и заменит ими существующие в примонтированной папке на хосте. Затем перезапустит контейнер Docker, чтобы LMS подхватила изменения.
+
+1. **Скачайте скрипт установки:**
+```bash
+   curl -O https://raw.githubusercontent.com/flurmind/MusicArtistInfo-RU/master/install.sh
+   chmod +x install.sh
+```
+2. Подготовьте данные (пример вашего docker-compose.yml):
+```yaml
+   services:
+     lms:
+       container_name: lms
+       image: lmscommunity/lyrionmusicserver:stable
+       volumes:
+         - /srv/ssd/appdata/lms/config:/config:rw
+```
+3. Отредактируйте install.sh и укажите параметры под вашу систему:
+   ```bash
+   nano install.sh
+   ```
+* **PLUGINS_DIR** — путь к папке плагинов на хосте. Для примера выше это будет: ***/srv/ssd/appdata/lms/config***/cache/InstalledPlugins/Plugins
+* **DOCKER_CONTAINER_NAME** — имя вашего контейнера (например, lms).
+
+4. Запустите скрипт (он заменит файлы плагина и перезапустит контейнер):
+```Bash
+   ./install.sh
+```
