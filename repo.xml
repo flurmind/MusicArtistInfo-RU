@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<extensions>
+  <details>
+    <title lang="EN">Music Artist Information (RU fork)</title>
+  </details>
+  <plugins>
+    <plugin name="MusicArtistInfo" version="1.30.999" minTarget="8.0" maxTarget="*">
+      <title lang="EN">Music Artist Information (RU fork)</title>
+      <desc lang="EN">Unofficial fork with improved Russian language support (Wikipedia, Last.fm, local lyrics).</desc>
+      <desc lang="RU">Неофициальный форк с улучшенной поддержкой русского языка (Wikipedia, Last.fm, локальные тексты песен).</desc>
+      <url>https://github.com/flurmind/MusicArtistInfo-RU/releases/download/1.30.999/MusicArtistInfo-RU-1.30.999.zip</url>
+      <sha>21e602ea5a6b9feb2049236b2f97197d4458e24e</sha>
+      <creator>flurmind</creator>
+      <email>flurmind@gmail.com</email>
+      <link>https://github.com/flurmind/MusicArtistInfo-RU</link>
+      <icon>https://www.herger.net/slim-plugins/icons/mai.svg</icon>
+    </plugin>
+  </plugins>
+</extensions>
